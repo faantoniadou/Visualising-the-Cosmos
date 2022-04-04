@@ -1,9 +1,9 @@
-Template for the Read the Docs tutorial
-=======================================
+Visualizing the Cosmic Web and Dark Matter Haloes
+=================================================
 
-This GitHub template includes fictional Python library
-with some basic Sphinx docs.
+This GitHub repository contains all scripts I developed for my Senior Honours Project
+as part of my Computational Physics BSc (Hons) at the University of Edinburgh.
 
-Read the tutorial here:
+The documentation can be found in the link below:
 
 https://docs.readthedocs.io/en/stable/tutorial/

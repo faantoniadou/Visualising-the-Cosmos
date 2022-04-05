@@ -1,0 +1,13 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Visualizing the Cosmic Web and Dark Matter Haloes
+message: >-
+  If you use this code in your project please cite it
+  using this file!
+type: software
+authors:
+  - given-names: Faidra
+    family-names: Antoniadou
+    email: faantoniadou@gmail.com

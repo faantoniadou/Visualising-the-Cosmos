@@ -27,6 +27,8 @@ import matplotlib.image as mpimg
 from matplotlib.pyplot import figure
 from matplotlib import rc_context, cm
 from matplotlib.colors import Normalize 
+import matplotlib.colors as mcolors
+from matplotlib import style
     
 from tqdm import tqdm
 # to create smoother camera path:
@@ -36,7 +38,7 @@ from scipy.stats import gaussian_kde
 
 from IPython.display import Image
 
-
+plt.style.use('ggplot')
 
 co = Cosmology()
 
@@ -56,10 +58,8 @@ def make_grid_name(fnumber=int(101)):
 class ExploreHalo:
     def __init__(self, fnumber=101, quantity='mass'):
         # some user inputs to be used in subsequent methods
-        # quantity maximum halo to find:
         self.quantity = quantity #str(input('Maximum quantity to search for in halo catalogue: '))
         self.how_large = int(input(f'Order to largest {quantity} (e.g. 1 is maximum and 2 is second to largest): '))
-        # self.grid_name = make_grid_name(101) #
         self.a = ytree.load("/disk12/legacy/GVD_C700_l100n2048_SLEGAC/dm_gadget/mergertree_h5/rockstar/rockstar.h5")        # load tree
         self.width = None
         self.filename = str(input("File name: "))#'TreeNode[512480954]_mass=500_dist.csv' #None
@@ -136,6 +136,10 @@ class ExploreHalo:
         prog_positions = np.array(my_tree["prog", "position"].to("unitary"))
         halo_mass = my_tree["mass"].to('Msun').value
         print(f"Halo mass: {my_tree['mass'].to('Msun')}")
+        print(f"Halo radius: {my_tree['virial_radius']}")
+        print(f"Halo position: {halo_position}")
+        print(f"Initial mass:  {my_tree['prog', 'mass'].to('Msun')[-1]}")
+        print(f"Initial virial radius:  {my_tree['prog', 'virial_radius'][-1]}")
         
         self.width = 2 * halo_radius            # minimum camera width to use in movies etc.
 
@@ -368,11 +372,8 @@ class ExploreHalo:
             KE = 1/2 * mu * ((main_vel - node_vel).dot(main_vel - node_vel))
             E = KE - GPE
             
-            if KE < GPE:
-                print(KE < GPE, node['mass'].value/primary_mass)
-            
             if (KE < GPE and node['mass'].value/primary_mass >= 0.01 and node['mass'].value <= primary_mass):
-                print("hi")
+
                 # find distance between progenitors of node and primary halo for as long as the node existed
                 for i, (main_pos, node_pos) in enumerate(zip(prog_positions, node_prog_positions)):
                     # let us account for periodic boundary conditions:
@@ -399,12 +400,9 @@ class ExploreHalo:
                     
                     primary_x.append(main_pos[0])
                     primary_y.append(main_pos[1])
-                    primary_z.append(main_pos[2])       
-                print("ok")             
+                    primary_z.append(main_pos[2])         
                 
                 if distances[0] > np.min(distances) and np.min(distances) <= initial_radius * 40:
-                    print(np.min(distances)/initial_radius)
-                    print(f"Energy = {KE, GPE}")
                     print('Suspected flyby found!')
 
                     df = pd.DataFrame({"x": primary_x, "y": primary_y, "z": primary_z, "x'": secondary_x, "y'": secondary_y, "z'": secondary_z, 
@@ -472,7 +470,7 @@ class ExploreHalo:
         # all together:
         fig0 = plt.figure(figsize=(10, 6))
         plt.plot(redshifts[:50], resultant_smooth_x[:50]*143.88489208633095, label='x-coordinate',linewidth=1, marker='.')
-        plt.plot(redshifts[:50], resultant_smooth_y[:50]*143.88489208633095 , label='y-coordinate',linewidth=1, marker='.')
+        plt.plot(redshifts[:50], resultant_smooth_y[:50]*143.88489208633095, label='y-coordinate',linewidth=1, marker='.')
         plt.plot(redshifts[:50], resultant_smooth_z[:50]*143.88489208633095, label='z-coordinate',linewidth=1, marker='.')
         
         plt.xlabel('Redshift')
@@ -487,7 +485,7 @@ class ExploreHalo:
         
         # absolute distance plot
         fig1 = plt.figure(figsize=(9, 5))
-        plt.plot(redshifts[:50], dists[:50]* 143.88489208633095,linewidth=1, marker='.')
+        plt.plot(redshifts[:50], dists[:50]*143.88489208633095,linewidth=1, marker='.')
         plt.xlabel('Redshift')
         plt.ylabel('Distance Magnitude (Mpc)')
         plt.xlim(0)
@@ -515,6 +513,9 @@ class ExploreHalo:
         ax.set_xlabel('X Path')
         ax.set_ylabel('Y Path')
         ax.set_zlabel('Z Path')
+        ax.set_xlim(-0.07,-0.02)
+        ax.set_ylim(0.065,0.09)
+        ax.set_zlim(-0.0225,-0.005)
 
         img = ax.scatter3D(rel_x, rel_y, rel_z, c=redshifts, cmap='jet', marker='x', label='actual path')
         
@@ -652,15 +653,15 @@ class ExploreHalo:
         my_tree = self.load_halo()
         prog_redshifts = my_tree["prog", "redshift"]
         prog_momenta = my_tree["prog", "angular_momentum_magnitude"]
-        
+        prog_masses = my_tree["prog", "mass"]
         # best fit polynomial 
         # spline was giving me a strange error and stackoverflow says it's because of the big difference 
         # in magnitude between y and x axes. this might also not be useful
         if with_polynomial==True:
-            z = np.polyfit(prog_redshifts[:10], prog_momenta[:10], pol_deg)
-            p = np.poly1d(z)
-            xp = np.linspace(np.min(prog_redshifts[:10]), np.max(prog_redshifts[:10]), 1000)
-            plt.plot(xp, p(xp),lw=0.5, linestyle=':', c='g')
+            z1 = np.polyfit(prog_redshifts[:10], prog_momenta[:10], pol_deg)
+            p1 = np.poly1d(z1)
+            xp1= np.linspace(np.min(prog_redshifts[:10]), np.max(prog_redshifts[:10]), 1000)
+            plt.plot(xp1, p1(xp1),lw=0.5, linestyle=':', c='g')
             
         plt.scatter(prog_redshifts[:10], prog_momenta[:10], marker='+', c='black')
         plt.plot(prog_redshifts[:10], prog_momenta[:10], lw=0.5, linestyle='--', c='k', alpha=0.6)
@@ -669,19 +670,59 @@ class ExploreHalo:
         plt.ylabel(r'Anglular momentum magnitude ($Mpc~M_{\odot} km/(h^2 s)$)')
         plt.savefig(f'AngMomfor={self.how_large}')
         plt.clf()
+        
+        plt.scatter(prog_redshifts[:10], prog_masses[:10], marker='+', c='black')
+        plt.plot(prog_redshifts[:10], prog_masses[:10], lw=0.5, linestyle='--', c='k', alpha=0.6)
+        plt.suptitle('Halo mass as a function of redshift')
+        plt.xlabel('Redshift')
+        plt.ylabel(r'Halo Mass ($M_{\odot}$)')
+        plt.savefig(f'Massfor={self.how_large}')
+        plt.clf()
 
 
     def plot_single_redshift(self):
         my_tree = self.load_halo()
         prog_redshifts = my_tree["prog", "redshift"]
         prog_masses = my_tree["prog", "mass"].to('Msun')
-        plt.plot(prog_redshifts, prog_masses)
-        plt.ylabel(r'Halo Mass ($M_{\odot}$)')
-        plt.xlabel('Redshift')
-        plt.yscale("log")
-        plt.title('Halo mass as a function of redshift')
-        plt.savefig(f'LOGRe_Redshift_VS_Mass_order={self.how_large}')
-        plt.clf()
+        prog_radii = my_tree["prog", "virial_radius"]
+        
+        fig, ax1 = plt.subplots()
+        color = 'tab:red'
+        ax1.set_xlabel('Redshift')
+        ax1.set_xlim(0, np.max(prog_redshifts))
+        ax1.set_ylabel(r'log(Halo Mass ($M_{\odot}$))', color=color)
+        ax1.set_yscale('log')
+        ax1.tick_params(which='major', color=color)
+        ax1.plot(prog_redshifts, prog_masses, linewidth=1, color=color)
+        ax1.scatter(prog_redshifts, prog_masses, marker='o', s=8., color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+        color = 'tab:blue'
+        ax2.set_ylabel('log(Virial radius (kpc))', color=color)  # we already handled the x-label with ax1
+        ax2.plot(prog_redshifts, prog_radii, linewidth=1, color=color)
+        ax2.scatter(prog_redshifts, prog_radii, marker='o', s=8., color=color)
+        ax2.set_yscale('log')
+        ax2.tick_params(which='major', color=color)
+        ax2.tick_params(which='minor', color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+
+        #fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        plt.title("Halo mass and virial radius as functions of redshift")
+        plt.savefig(f'LOGRe_Redshift_VS_Mass_VS_Radius_order={self.how_large}')
+        plt.show()
+
+
+        # plt.plot(prog_redshifts, prog_masses, linewidth=1)
+        # plt.scatter(prog_redshifts, prog_masses, marker='o', s=8.)
+        # plt.ylabel(r'log(Halo Mass ($M_{\odot}$))')
+        # plt.xlabel('Redshift')
+        # plt.xlim(0)
+        # plt.yscale("log")
+        # plt.title('Halo mass as a function of redshift')
+        # plt.savefig(f'LOGRe_Redshift_VS_Mass_order={self.how_large}')
+        # plt.clf()
 
 
     def plot_many_halos(self):
@@ -710,14 +751,17 @@ class ExploreHalo:
         print("Done!")  
         # Calculate the point density
         xy = np.vstack([redshifts, masses])
-        z = gaussian_kde(xy)(xy)
-        plt.scatter(redshifts, masses, c=z, s=2, cmap='jet')
+        z = np.array(gaussian_kde(xy)(xy))
+        
+        # Sort the points by density, so that the densest points are plotted last
+        idx = z.argsort()
+        redshifts, masses, z = redshifts[idx], masses[idx], z[idx]
+        plt.scatter(redshifts, masses, c=z, s=3, cmap='jet')
 
         plt.colorbar()
         plt.yscale("log")
-        plt.xscale("log")
-        plt.xlabel('log(z)')
-        plt.ylabel(r'Halo Mass ($M_{\odot}$)')
+        plt.xlabel('z')
+        plt.ylabel(r'log(Halo Mass ($M_{\odot}$))')
         plt.xlim(0)
         
         plt.title('Halo mass as a function of redshift')
@@ -727,20 +771,62 @@ class ExploreHalo:
         
         
         
-        xy = np.vstack([snapshots, masses])
-        z = gaussian_kde(xy)(xy)
-        plt.scatter(snapshots, masses, c=z, s=2, cmap='jet')
+        # xy = np.vstack([snapshots, masses])
+        # z = gaussian_kde(xy)(xy)
+        # print("Plotting...")
+        # plt.scatter(snapshots, masses, c=z, s=2, cmap='jet')
 
-        plt.colorbar()
-        plt.yscale("log")
-        plt.xlabel('Snapshot number')
-        plt.ylabel(r'Halo Mass ($M_{\odot}$)')
-        plt.xlim(0)
+        # plt.colorbar()
+        # plt.yscale("log")
+        # plt.xlabel('Snapshot number')
+        # plt.ylabel(r'log(Halo Mass ($M_{\odot}$))')
+        # plt.xlim(0)
         
-        plt.title('Halo mass as a function of snapshot number')
+        # plt.title('Halo mass as a function of snapshot number')
             
-        plt.savefig(f'hexbin Many snapshots until {self.how_large}')
-        plt.clf()
+        # plt.savefig(f'Many snapshots until {self.how_large}')
+        # plt.clf()
+        
+        
+    def plot_mass_momenta(self):
+        values = (self.a[self.quantity]).tolist()
+        values.sort()
+        redshifts = []
+        masses = []
+        snapshots = []
+        momenta =[]
+        
+        for k in tqdm(range(1,self.how_large+1)):
+            values = (self.a[self.quantity]).tolist()
+            values.sort()
+        
+            idx = np.where(self.a[self.quantity] == (values[-k]))[0][0]    # gets index 
+            one_tree = self.a[idx]
+            
+            prog_redshifts = np.array(one_tree["prog", "redshift"])
+            prog_masses = np.array((one_tree["prog", "mass"].to('Msun')).value)
+            prog_momenta = np.array(one_tree["prog", "angular_momentum_magnitude"])
+            
+            masses.extend(prog_masses)
+            redshifts.extend(prog_redshifts)
+            momenta.extend(prog_momenta)
+            # plt.plot(prog_redshifts, prog_masses, label=f'Halo mass order from largest = {k}')
+            # plt.yscale("log")
+        print("Done!")  
+
+        plt.hist2d(masses, momenta, bins=[100, 100], cmap=plt.cm.jet )
+        cb = plt.colorbar()
+        cb.set_label("Number of dark matter haloes")
+        plt.yscale("log")
+        plt.xscale("log")
+        plt.ylabel(r'log( Anglular momentum magnitude ($Mpc~M_{\odot} km/(h^2 s)$)' )
+        plt.xlabel(r'log( Halo Mass ($M_{\odot}$) )')
+        plt.tight_layout() 
+        
+        plt.title('Halo mass as a function of angular momentum magnitude')
+            
+        plt.savefig(f'MassMomenta_To_{self.how_large}')
+        # plt.clf()
 
 
     def navigate(self, how_far):
@@ -748,10 +834,10 @@ class ExploreHalo:
         initial_position, initial_radius, primary_mass, _, prog_positions= self.get_properties()
         distances = []
         positions = []
-        width = 2*initial_radius
+        width = 2 * initial_radius          # to be used for the Camera interface
 
         # 6e14 is just an example. this can be adjusted to find haloes of different masses
-        for halo in self.a.select_halos("(tree['forest', 'mass'].to('Msun') > 6e14) & (tree['forest', 'mass'].to('Msun') > 690072000000000.0)"):        # exclude the most massive halo
+        for halo in self.a.select_halos("(tree['forest', 'mass'].to('Msun') > 6e14) & (tree['forest', 'mass'].to('Msun') > 690072000000000.0)"):
             pair_pos = halo["position"].to("unitary")
             distance = np.linalg.norm(np.array(pair_pos) - np.array(initial_position))
             positions.append(np.array(pair_pos))
@@ -761,9 +847,9 @@ class ExploreHalo:
             print('No haloes found.')
         # now we want to choose a halo that is neither too close nor too far from the target
         idx = (np.abs(distances - how_far * np.array(width))).argmin()
-        final_position = positions[idx]
+        final_position = np.array(positions[idx])
         
-        return initial_position, width, prog_snaps, np.array(final_position)
+        return initial_position, width, prog_snaps, final_position
 
 
 
@@ -789,7 +875,11 @@ def test():
     # data = DatasetBasics()
     # data.plot_quant()
     # halo.plot_flyby_changes()
+    halo.get_properties()
+    # halo.plot_mass_momenta()
     
-    halo.plot_many_halos()
+    # halo.plot_single_redshift()
+    
+    # halo.plot_many_halos()
     
 test()

@@ -4,10 +4,7 @@ main
 
 User input
 ----------------
-Upon initialisation the user is prompted to enter information about the halo we want to analyse. These are are found as instance variables which we describe below:
-
-.. autofunction:: self.quantity
-.. autofunction:: self.how_large
+Upon initialisation the user is prompted to enter information about the halo we want to analyse. These are the instance variables ``self.quantity`` and ``self.how_large``. The former is the quantity to search for in halo catalogue and the latter is the size of the quantity possessed by our halo, relative to the maximum. For instance, if we set ``self.quantity = mass`` and ``self.how_large = 3``, we would be looking at the dark matter halo with the third to largest mass.
 
 
 

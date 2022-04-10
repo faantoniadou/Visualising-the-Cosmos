@@ -19,5 +19,7 @@ Contents
 .. toctree::
 
    usage
-      main.py
-   api
+      main
+      movie maker
+      dataset_basics
+      simple_plot

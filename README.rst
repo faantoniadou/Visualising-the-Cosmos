@@ -6,4 +6,4 @@ as part of my Computational Physics BSc (Hons) at the University of Edinburgh.
 
 The documentation can be found in the link below:
 
-https://docs.readthedocs.io/en/stable/tutorial/
+https://visualising-the-cosmos.readthedocs.io/en/latest/#

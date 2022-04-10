@@ -18,6 +18,10 @@ Contents
 .. toctree::
 
    main
+   
    movie maker
+   
    dataset_basics
+
    simple_plot
+

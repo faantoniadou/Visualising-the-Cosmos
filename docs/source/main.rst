@@ -10,7 +10,8 @@ Upon initialisation the user is prompted to enter information about the halo we 
 
 A list of the methods of this class is provided below:
 
-* ``ExploreHalo.load_halo()``
+* ``ExploreHalo.load_halo()`` :
+
   Subsequently, the ``ExploreHalo.load_halo()`` function loads the ``Arbor`` object of the halo of interest.
   .. autofunction:: ExploreHalo.load_halo
 

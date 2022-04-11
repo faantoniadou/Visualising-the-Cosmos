@@ -1,4 +1,4 @@
-main
+ExploreHalo
 ===========
 
 This file contains the ``ExploreHalo`` class which carries our halo merger tree operations.
@@ -45,7 +45,7 @@ A list of the methods of this class is provided below:
 
 * ``ExploreHalo.get_flybys_energy()``:
 
-  Loops through halos in the region created above and identifies the type of interaction of the target halo with these. In particular, it identifies flybys based on certain criteria as described in my report. The main criterion is that the total energy of the two-body system is negative, such that the two halos are not energetically bound and thus will not merge in the future. All parameters of interest are then stored in a Pandas ``DataFrame`` saved in a .csv file with the node's number. This takes quite a while to run, so it could benefit from parallelism strategies.
+  Loops through halos in the region created above and identifies the type of interaction of the target halo with these. In particular, it identifies flybys based on certain criteria as described in my report. The criterion is that the total energy of the two-body system is negative, such that the two halos are not energetically bound and thus will not merge in the future. All parameters of interest are then stored in a Pandas ``DataFrame`` saved in a .csv file with the node's number. This takes quite a while to run, so it could benefit from parallelism strategies.
   
 .. autofunction:: ExploreHalo.get_flybys_energy
 

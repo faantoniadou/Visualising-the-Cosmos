@@ -125,11 +125,9 @@ class Animations(Setting, ExploreHalo):
         
         
     def linear_path(self, how_far=10, no_steps=200):
-        '''
-        Makes a smooth camera path between 2 points
-        '''
-        # initial_position, width, prog_snaps, final_position = ExploreHalo.navigate(self, how_far)
-        initial_position, width, prog_snaps, final_position = self.navigate(how_far)
+        # makes a smooth camera path between 2 points
+
+        initial_position, width, prog_snaps, final_position = self.get_neighbour(how_far)
         
         
         x_initial, y_initial, z_initial = initial_position[0], initial_position[1], initial_position[2]
@@ -144,8 +142,9 @@ class Animations(Setting, ExploreHalo):
 
 
     def nav_movie(self, fnumber=101):
+        # implements nav_progs.py file, navigating between neighbouring progenitors
+        
         no_steps = int(input("Number of frames to move through"))
-        # implements nav_progs.py file, navigating between progenitors
         this_far = float(input("How far should I search (in units of the halo's radius)? "))
         final_position, width, all_positions, prog_snaps, prog_positions = self.linear_path(this_far, no_steps)
         
@@ -173,6 +172,7 @@ class Animations(Setting, ExploreHalo):
 
 
     def time_movie(self, starting_snap=101):
+        # movie of progenitors
         halo_position, halo_radius, halo_mass, prog_snaps, prog_positions = self.get_properties()
         prog_positions = self.smooth_path(prog_positions)
         self.zoom_factor = float(input("Zoom factor: "))

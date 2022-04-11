@@ -56,19 +56,20 @@ def make_grid_name(fnumber=int(101)):
 
 
 class ExploreHalo:
+    filename = None
     def __init__(self, fnumber=101, quantity='mass'):
         # some user inputs to be used in subsequent methods
-        self.quantity = quantity #str(input('Maximum quantity to search for in halo catalogue: '))
+        self.quantity = str(input('Maximum quantity to search for in halo catalogue: '))
         self.how_large = int(input(f'Order to largest {quantity} (e.g. 1 is maximum and 2 is second to largest): '))
         self.a = ytree.load("/disk12/legacy/GVD_C700_l100n2048_SLEGAC/dm_gadget/mergertree_h5/rockstar/rockstar.h5")        # load tree
         self.width = None
-        self.filename = str(input("File name: "))#'TreeNode[512480954]_mass=500_dist.csv' #None
         self.field = ("grid", "nbody_mass")
         self.ds = make_grid_name(fnumber)
         
 
     def basics(self):
-
+        # prints basic information about our dataset
+        
         print (f'Box size: {self.a.box_size}')
         print (f'Cosmological parameters: {self.a.hubble_constant, self.a.omega_matter, self.a.omega_lambda}')
         print (f'Field list: {self.a.field_list}')
@@ -151,7 +152,8 @@ class ExploreHalo:
         Gets neighbouring halo based on criteria
         This can be modified to use a sphere object instead since it is specific to one halo
         '''
-        initial_position, _, _, prog_snaps, _ = self.get_properties()
+        initial_position, halo_radius, _, prog_snaps, _ = self.get_properties()
+        
         self.how_far = float(input("How far should I search (in units of the halo's diameter)? "))
         
         # empty list for halo distances
@@ -173,7 +175,9 @@ class ExploreHalo:
         idx = (np.abs(distances - self.how_far * np.array(self.width))).argmin()
         final_position = positions[idx]
         
-        return initial_position, prog_snaps, final_position
+        width = 2*halo_radius           # to be used in movie making
+        
+        return initial_position, width, prog_snaps, final_position
 
 
     def neighbour_path(self, frames=100):
@@ -372,7 +376,7 @@ class ExploreHalo:
             KE = 1/2 * mu * ((main_vel - node_vel).dot(main_vel - node_vel))
             E = KE - GPE
             
-            if (KE < GPE and node['mass'].value/primary_mass >= 0.01 and node['mass'].value <= primary_mass):
+            if (E < 0 and node['mass'].value/primary_mass >= 0.01 and node['mass'].value <= primary_mass):
 
                 # find distance between progenitors of node and primary halo for as long as the node existed
                 for i, (main_pos, node_pos) in enumerate(zip(prog_positions, node_prog_positions)):
@@ -417,9 +421,9 @@ class ExploreHalo:
 
 
     def flyby_posns(self):
-        # self.filename = str(input("File name: ")) 
+        filename = str(input("File name: ")) 
         # read the dataframe
-        df = pd.read_csv(self.filename)
+        df = pd.read_csv(filename)
         
         fly_radius = np.array(df["Flyby Radius"])
         main_radius = np.array(df["Primary Radius"])         # to be used in width of camera
@@ -479,7 +483,7 @@ class ExploreHalo:
         plt.legend()
         
         plt.title('Flyby position relative to the primary halo')
-        fig0.savefig(f'{self.filename}_path_boundary.png')
+        fig0.savefig(f'{filename}_path_boundary.png')
         
         plt.clf()
         
@@ -490,7 +494,7 @@ class ExploreHalo:
         plt.ylabel('Distance Magnitude (Mpc)')
         plt.xlim(0)
         plt.title('Distance magnitude between the two haloes as a function of redshift')
-        fig1.savefig(f'{self.filename}_dists.png')
+        fig1.savefig(f'{filename}_dists.png')
         
         plt.clf()
         
@@ -524,7 +528,7 @@ class ExploreHalo:
         
         
         plt.legend(loc=2, prop={'size': 9}, bbox_to_anchor=(0.1,0.9))
-        fig2.savefig(f'{self.filename}_3Dpath_boundary.png')
+        fig2.savefig(f'{filename}_3Dpath_boundary.png')
     
         # make useful arrays
         res_smooth = np.column_stack((resultant_smooth_x, resultant_smooth_y, resultant_smooth_z))
@@ -538,7 +542,7 @@ class ExploreHalo:
 
     def flyby_vis(self):
         my_tree = self.load_halo()
-        df = pd.read_csv(self.filename)
+        df = pd.read_csv(filename)
 
         initial_position, initial_radius, primary_mass, _, prog_positions = self.get_properties()
         dists, _, _, _, fly_actual, main_actual, _, _, snaps, main_radius, fly_radius = self.flyby_posns()
@@ -606,7 +610,7 @@ class ExploreHalo:
             
             p.annotate_marker([center[slice1], center[slice2]], coord_system="plot")
             # Save the image with the keyword.
-            p.save(f"ole_{snap}_{self.filename}_{self.quantity}={self.how_large}")
+            p.save(f"ole_{snap}_{filename}_{self.quantity}={self.how_large}")
             p.clear_annotations()                                           # clear annotations to avoid confusion
             
 
@@ -755,6 +759,7 @@ class ExploreHalo:
         
         # Sort the points by density, so that the densest points are plotted last
         idx = z.argsort()
+    
         redshifts, masses, z = redshifts[idx], masses[idx], z[idx]
         plt.scatter(redshifts, masses, c=z, s=3, cmap='jet')
 
@@ -786,70 +791,6 @@ class ExploreHalo:
             
         # plt.savefig(f'Many snapshots until {self.how_large}')
         # plt.clf()
-        
-        
-    def plot_mass_momenta(self):
-        values = (self.a[self.quantity]).tolist()
-        values.sort()
-        redshifts = []
-        masses = []
-        snapshots = []
-        momenta =[]
-        
-        for k in tqdm(range(1,self.how_large+1)):
-            values = (self.a[self.quantity]).tolist()
-            values.sort()
-        
-            idx = np.where(self.a[self.quantity] == (values[-k]))[0][0]    # gets index 
-            one_tree = self.a[idx]
-            
-            prog_redshifts = np.array(one_tree["prog", "redshift"])
-            prog_masses = np.array((one_tree["prog", "mass"].to('Msun')).value)
-            prog_momenta = np.array(one_tree["prog", "angular_momentum_magnitude"])
-            
-            masses.extend(prog_masses)
-            redshifts.extend(prog_redshifts)
-            momenta.extend(prog_momenta)
-            # plt.plot(prog_redshifts, prog_masses, label=f'Halo mass order from largest = {k}')
-            # plt.yscale("log")
-        print("Done!")  
-
-        plt.hist2d(masses, momenta, bins=[100, 100], cmap=plt.cm.jet )
-        cb = plt.colorbar()
-        cb.set_label("Number of dark matter haloes")
-        plt.yscale("log")
-        plt.xscale("log")
-        plt.ylabel(r'log( Anglular momentum magnitude ($Mpc~M_{\odot} km/(h^2 s)$)' )
-        plt.xlabel(r'log( Halo Mass ($M_{\odot}$) )')
-        plt.tight_layout() 
-        
-        plt.title('Halo mass as a function of angular momentum magnitude')
-            
-        plt.savefig(f'MassMomenta_To_{self.how_large}')
-        # plt.clf()
-
-
-    def navigate(self, how_far):
-        
-        initial_position, initial_radius, primary_mass, _, prog_positions= self.get_properties()
-        distances = []
-        positions = []
-        width = 2 * initial_radius          # to be used for the Camera interface
-
-        # 6e14 is just an example. this can be adjusted to find haloes of different masses
-        for halo in self.a.select_halos("(tree['forest', 'mass'].to('Msun') > 6e14) & (tree['forest', 'mass'].to('Msun') > 690072000000000.0)"):
-            pair_pos = halo["position"].to("unitary")
-            distance = np.linalg.norm(np.array(pair_pos) - np.array(initial_position))
-            positions.append(np.array(pair_pos))
-            distances.append(distance)
-        
-        if len(distances) == 0:
-            print('No haloes found.')
-        # now we want to choose a halo that is neither too close nor too far from the target
-        idx = (np.abs(distances - how_far * np.array(width))).argmin()
-        final_position = np.array(positions[idx])
-        
-        return initial_position, width, prog_snaps, final_position
 
 
 

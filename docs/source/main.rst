@@ -1,4 +1,4 @@
-ExploreHalo
+main
 ===========
 
 This file contains the ``ExploreHalo`` class which carries our halo merger tree operations.

@@ -55,17 +55,39 @@ A list of the methods of this class is provided below:
  
 .. autofunction:: ExploreHalo.flyby_posns
 
-* ``ExploreHalo.flyby_vis``
+* ``ExploreHalo.flyby_vis()``
 
   Plots projection plots to visualise the flyby's path. The position of the flyby is annotated.
   
 .. autofunction:: ExploreHalo.flyby_vis
 
-* ``ExploreHalo.plot_camera_path``
+* ``ExploreHalo.plot_camera_path()``
 
   Used to plot the path of the camera in progenitor time series movies.
   
 .. autofunction:: ExploreHalo.plot_camera_path
+
+* ``ExploreHalo.plot_arbor()``
+
+  Creates a digraph depicting halos as filled circles with sizes proportional to their mass. The main progenitor line will be colored red.
+  Bear in mind that this will take extremely long for massive halos and will produce an illegible diagram. 
+  
+.. autofunction:: ExploreHalo.plot_camera_path
+
+* ``ExploreHalo.plot_flyby_changes()``
+
+  Plots the angular momentum magnitude and mass changes of the target halo.
+  
+.. autofunction:: ExploreHalo.plot_flyby_changes
+
+* ``ExploreHalo.plot_many_halos()``
+
+  Plots a point density scatter plot of halo mass against redshift. If we set ``self.how_large = 100``, this will be plotted for the 100 most massive halos for instance.
+
+.. autofunction:: ExploreHalo.plot_many_halos
+
+
+Enjoy!
 
 
 
